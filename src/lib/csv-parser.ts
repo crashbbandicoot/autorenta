@@ -289,6 +289,12 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
         lotList.filter((l) => l.qty > 1e-10)
       );
 
+      // For CASH forex: unmatched qty means EUR sold from base-currency balance
+      // (no explicit BUY lot). Cost = face value (1 EUR = 1 EUR) → real FX P&L.
+      if (isCash && remainingQty > 1e-10) {
+        costBasisEur += remainingQty;
+      }
+
       const proceedsEur = isCash ? tradeMoney * fx : netCash * fx;
       const pnl = proceedsEur - costBasisEur;
       const year = parseInt(date.slice(0, 4), 10);
