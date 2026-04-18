@@ -3,14 +3,13 @@
 import { ExcelDownloadButton } from "@/components/informe/ExcelDownloadButton";
 import { ReportTable } from "@/components/informe/ReportTable";
 import { useExtractos } from "@/context/ExtractosContext";
-import { parseOperaciones, calcularPyG } from "@/lib/csv-parser";
+import { calcularPyG } from "@/lib/csv-parser";
 
 const COLUMNS = ["Año", "Ticker", "Tipo", "F. Compra", "F. Venta", "Precio Compra", "Precio Venta", "Resultado (EUR)"];
 
 export default function PygPage() {
   const { csvFiles, validation } = useExtractos();
-  const transacciones = parseOperaciones(csvFiles);
-  const rows = calcularPyG(transacciones) as Record<string, unknown>[];
+  const rows = calcularPyG(csvFiles) as unknown as Record<string, unknown>[];
 
   return (
     <div className="space-y-4">

@@ -20,7 +20,14 @@ export interface TransaccionRow {
 }
 
 export interface PygRow {
-  [key: string]: string | number;
+  Año: number;
+  Ticker: string;
+  Tipo: string;
+  "F. Compra": string;
+  "F. Venta": string;
+  "Precio Compra": number;
+  "Precio Venta": number;
+  "Resultado (EUR)": number;
 }
 
 export interface ExtractosState {
