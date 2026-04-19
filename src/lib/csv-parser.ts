@@ -1,5 +1,6 @@
 import Papa from "papaparse";
 import type { CsvFile, DividendRow, TransaccionRow, PygRow, InformeDividendosRow } from "@/types";
+import { getTreatyRate } from "@/lib/treaty-rates";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -356,7 +357,48 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
   }));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function calcularInformeDividendos(_files: CsvFile[]): InformeDividendosRow[] {
-  return []; // TODO: implementar cálculo
+export function calcularInformeDividendos(files: CsvFile[]): InformeDividendosRow[] {
+  const dividends = parseDividendos(files);
+
+  // "Interest from RIC or REIT" se declara en casilla 0027, no en dividendos
+  const filtered = dividends.filter(
+    (d) => !String(d.Producto).includes("Interest from RIC or REIT")
+  );
+
+  // Agrupar por (Año, País)
+  const groups = new Map<string, { año: number; pais: string; bruto: number; retenOri: number }>();
+  for (const d of filtered) {
+    const año = Number(String(d.Fecha).slice(0, 4));
+    const pais = String(d.Pais);
+    const key = `${año}|${pais}`;
+    const g = groups.get(key) ?? { año, pais, bruto: 0, retenOri: 0 };
+    g.bruto = r2(g.bruto + Number(d["Valor Bruto (€)"]));
+    g.retenOri = r2(g.retenOri + Number(d["Retencion origen(€)"]));
+    groups.set(key, g);
+  }
+
+  return [...groups.values()]
+    .sort((a, b) => a.año - b.año || a.pais.localeCompare(b.pais))
+    .map(({ año, pais, bruto, retenOri }) => {
+      const treatyRate = getTreatyRate(pais, año);
+      // Doble imposición solo si existe convenio Y hubo retención Y no es Return of Capital
+      const hasTreaty = treatyRate > 0 && retenOri > 0 && pais !== "Return of Capital";
+      const pctRet = bruto > 0 ? r2((retenOri / bruto) * 100) : 0;
+      const brutoDI = hasTreaty ? bruto : 0;
+      const retenDI = hasTreaty ? r2(Math.min(retenOri, (bruto * treatyRate) / 100)) : 0;
+
+      return {
+        Año: año,
+        País: pais,
+        "Importe Bruto (€)": bruto,
+        "Reten. Ori.(€)": retenOri,
+        "Reten. Des.(€)": 0,
+        "% Retenciones": pctRet,
+        "Casilla 0029 — Importe Bruto (€)": bruto,
+        "Reten. dest. -España- (€)": 0,
+        "Casilla 0588 — Bruto Doble Impo. (€)": brutoDI,
+        "Reten. ori. Doble Impo. (€)": retenDI,
+        "% según lím. convenio": treatyRate,
+      };
+    });
 }
