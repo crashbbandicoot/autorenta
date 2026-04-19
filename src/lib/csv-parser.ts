@@ -186,7 +186,7 @@ function rowToTransaccion(r: Record<string, string>): TransaccionRow {
 
   return {
     Broker: "IBKR",
-    ISIN: isCash ? (r["Symbol"] ?? "") : (r["ISIN"] ?? ""),
+    ISIN: isCash ? (r["Symbol"] ?? "") : (r["ISIN"] || r["Symbol"] || ""),
     Descripcion: isCash ? (r["Symbol"] ?? "") : (r["Description"] ?? ""),
     "Compra/Venta (C-V)": cv,
     Fecha: fmtDate(r["TradeDate"]),
@@ -238,7 +238,7 @@ function parseRawTrades(files: CsvFile[]): RawTrade[] {
   return aggregated.map((r) => ({
     date: r["TradeDate"] ?? "",
     isin:
-      r["AssetClass"] === "CASH" ? (r["Symbol"] ?? "") : (r["ISIN"] ?? ""),
+      r["AssetClass"] === "CASH" ? (r["Symbol"] ?? "") : (r["ISIN"] || r["Symbol"] || ""),
     assetClass: r["AssetClass"] ?? "",
     buySell: r["Buy/Sell"] ?? "",
     qty: Math.abs(f(r["Quantity"])),
