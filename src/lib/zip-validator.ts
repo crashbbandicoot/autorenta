@@ -4,6 +4,10 @@ import type { ValidationResult, CsvFile } from "@/types";
 
 const VALID_FILE_REGEX = /^(dividendos|operaciones)_(\d{4})\.csv$/i;
 
+// Asset classes the parser knows how to handle. Anything outside this set
+// gets treated as STK (non-cash), which may produce wrong P&L figures.
+const KNOWN_ASSET_CLASSES = new Set(["STK", "OPT", "FUT", "FOP", "CASH", "WAR"]);
+
 // Columns the operaciones parser depends on by name
 const OPERACIONES_REQUIRED_COLS = [
   "LevelOfDetail",
@@ -56,6 +60,23 @@ function validateCsvContent(csvFile: CsvFile): { errors: string[]; warnings: str
         warnings.push(
           `${csvFile.name}: no contiene operaciones ejecutadas (LevelOfDetail=EXECUTION). ` +
             `El archivo es estructuralmente correcto pero no aportará datos al informe.`
+        );
+      }
+
+      // Warn about unknown asset classes — treated as STK which may produce wrong P&L
+      const unknownClasses = [
+        ...new Set(
+          execRows
+            .filter((r) => r["TransactionType"] === "ExchTrade")
+            .map((r) => r["AssetClass"])
+            .filter((ac): ac is string => !!ac && !KNOWN_ASSET_CLASSES.has(ac))
+        ),
+      ];
+      if (unknownClasses.length > 0) {
+        warnings.push(
+          `${csvFile.name}: tipo(s) de activo no reconocido(s): ${unknownClasses.join(", ")}. ` +
+            `El programa los calculará como acciones ordinarias, lo que puede producir cifras incorrectas. ` +
+            `Reporta este aviso indicando el nombre del archivo y el tipo de activo.`
         );
       }
     }
