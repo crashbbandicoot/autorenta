@@ -23,6 +23,30 @@ function f(s: string | undefined): number {
 
 // ─── parseDividendos ─────────────────────────────────────────────────────────
 
+type RawDivRow = {
+  año: number; pais: string; producto: string;
+  grossInBase: number; withholdInBase: number;
+};
+
+function collectRawDivRows(files: CsvFile[]): RawDivRow[] {
+  const rows: RawDivRow[] = [];
+  for (const file of files.filter((f) => f.type === "dividendos").sort((a, b) => a.year - b.year)) {
+    const parsed = Papa.parse<string[]>(file.rawContent, { header: false, skipEmptyLines: true });
+    for (const row of parsed.data) {
+      if (row[0] !== "DividendDetail" || row[1] !== "Data" || row[2] !== "RevenueComponent") continue;
+      const revenueComponent = row[10] ?? "";
+      rows.push({
+        año: parseInt(row[7]?.slice(0, 4) ?? "0"),
+        pais: revenueComponent.includes("Return of Capital") ? "Return of Capital" : (row[6] ?? ""),
+        producto: `${row[4]}-${revenueComponent}`,
+        grossInBase: f(row[13]),
+        withholdInBase: Math.abs(f(row[16])),
+      });
+    }
+  }
+  return rows;
+}
+
 export function parseDividendos(files: CsvFile[]): DividendRow[] {
   const rows: DividendRow[] = [];
 
@@ -358,32 +382,30 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
 }
 
 export function calcularInformeDividendos(files: CsvFile[]): InformeDividendosRow[] {
-  const dividends = parseDividendos(files);
-
-  // "Interest from RIC or REIT" se declara en casilla 0027, no en dividendos
-  const filtered = dividends.filter(
-    (d) => !String(d.Producto).includes("Interest from RIC or REIT")
+  // Usar valores brutos sin redondeo por fila para evitar drift de acumulación
+  const rawRows = collectRawDivRows(files).filter(
+    (d) => !d.producto.includes("Interest from RIC or REIT")
   );
 
   // Agrupar por (Año, País)
   const groups = new Map<string, { año: number; pais: string; bruto: number; retenOri: number }>();
-  for (const d of filtered) {
-    const año = Number(String(d.Fecha).slice(0, 4));
-    const pais = String(d.Pais);
-    const key = `${año}|${pais}`;
-    const g = groups.get(key) ?? { año, pais, bruto: 0, retenOri: 0 };
-    g.bruto = r2(g.bruto + Number(d["Valor Bruto (€)"]));
-    g.retenOri = r2(g.retenOri + Number(d["Retencion origen(€)"]));
+  for (const d of rawRows) {
+    const key = `${d.año}|${d.pais}`;
+    const g = groups.get(key) ?? { año: d.año, pais: d.pais, bruto: 0, retenOri: 0 };
+    g.bruto    += d.grossInBase;
+    g.retenOri += d.withholdInBase;
     groups.set(key, g);
   }
 
   return [...groups.values()]
     .sort((a, b) => a.año - b.año || a.pais.localeCompare(b.pais))
-    .map(({ año, pais, bruto, retenOri }) => {
+    .map(({ año, pais, bruto: rawBruto, retenOri: rawRetenOri }) => {
+      const bruto    = r2(rawBruto);
+      const retenOri = r2(rawRetenOri);
       const treatyRate = getTreatyRate(pais, año);
       // Doble imposición solo si existe convenio Y hubo retención Y no es Return of Capital
       const hasTreaty = treatyRate > 0 && retenOri > 0 && pais !== "Return of Capital";
-      const pctRet = bruto > 0 ? r2((retenOri / bruto) * 100) : 0;
+      const pctRet  = bruto > 0 ? r2((retenOri / bruto) * 100) : 0;
       const brutoDI = hasTreaty ? bruto : 0;
       const retenDI = hasTreaty ? r2(Math.min(retenOri, (bruto * treatyRate) / 100)) : 0;
 
@@ -398,7 +420,8 @@ export function calcularInformeDividendos(files: CsvFile[]): InformeDividendosRo
         "Reten. dest. -España- (€)": 0,
         "Casilla 0588 — Bruto Doble Impo. (€)": brutoDI,
         "Reten. ori. Doble Impo. (€)": retenDI,
-        "% según lím. convenio": treatyRate,
+        // Mostrar el límite del convenio solo cuando es aplicable (hasTreaty); 0 si no aplica
+        "% según lím. convenio": hasTreaty ? treatyRate : 0,
       };
     });
 }
