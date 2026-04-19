@@ -23,10 +23,15 @@ export default function DividendosPage() {
         />
       </div>
       <ReportTable columns={COLUMNS} rows={rows} />
-      {rows.length === 0 && validation?.valid && (
-        <p className="text-xs text-gray-400 text-center">
-          El procesamiento de CSVs se implementará en la próxima versión.
-        </p>
+      {rows.length === 0 && validation?.valid && csvFiles.some((f) => f.type === "dividendos") && (
+        <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-800 space-y-1">
+          <p className="font-medium">No se generaron filas a partir de los archivos de dividendos.</p>
+          <p>Causas posibles:</p>
+          <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+            <li>La sesión expiró — vuelve a <a href="/subir-extractos" className="underline">Subir extractos</a> para recargar el ZIP.</li>
+            <li>El formato del CSV ha cambiado (posible actualización de IBKR). Si los datos parecen correctos, reporta el problema indicando el nombre del archivo afectado.</li>
+          </ul>
+        </div>
       )}
     </div>
   );

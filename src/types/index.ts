@@ -8,6 +8,7 @@ export interface CsvFile {
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+  warnings: string[];
   files: CsvFile[];
 }
 
