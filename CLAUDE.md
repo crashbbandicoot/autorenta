@@ -41,9 +41,23 @@ src/
 │   ├── informe/            # InformeSubNav, ReportTable, ExcelDownloadButton
 │   └── tutorial/           # TutorialStep, TutorialSection, InfoCallout
 ├── context/                # ExtractosContext (estado global)
-├── lib/                    # zip-validator, csv-parser (STUB), excel-exporter
+├── lib/                    # zip-validator, csv-parser, excel-exporter
 └── types/                  # Interfaces TypeScript compartidas
 ```
 
-## Estado actual del CSV parsing
-`src/lib/csv-parser.ts` devuelve arrays vacíos (stub). Pendiente implementar cuando se confirme la estructura de columnas de los CSVs de IBKR.
+## Lógica de cálculo PyG (`src/lib/csv-parser.ts`)
+
+- `calcularPyG` calcula solo asset classes **STK** (y OPT/FUT si aparecen). Las filas `AssetClass === "CASH"` se filtran en `parseRawTrades` y no se procesan.
+- Algoritmo FIFO por ISIN; soporta partial fills (agrupados por `IBOrderID`) y corporate actions (renombrado de ISIN).
+- Validado contra `test_data/outputs/InformePyG.pdf`: 50/53 filas STK exactas. Las 3 diferencias restantes son acciones GB cotizadas en GBP — pequeñas discrepancias de FX GBP/EUR, aceptadas de momento.
+
+## Scripts de diagnóstico / validación
+
+Los archivos `.cjs` en la raíz son scripts de Node para diagnóstico y validación, no son parte del build:
+
+| Archivo | Propósito |
+|---|---|
+| `validate_pyg_stk.cjs` | Compara resultados STK de `calcularPyG` con el PDF de referencia |
+| `diag_pyg.cjs` | Diagnóstico de trades individuales (CASH, parciales, DR. MARTENS…) |
+| `validate_all.cjs` | Validación general |
+| `test_ops.cjs/mjs` | Pruebas de operaciones |
