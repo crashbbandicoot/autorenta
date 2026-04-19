@@ -236,20 +236,20 @@ function parseRawTrades(files: CsvFile[]): RawTrade[] {
   const rawRows = collectRawOpRows(files);
   const aggregated = aggregatePartialFills(rawRows); // already sorted by date
 
-  return aggregated.map((r) => ({
-    date: r["TradeDate"] ?? "",
-    isin:
-      r["AssetClass"] === "CASH" ? (r["Symbol"] ?? "") : (r["ISIN"] || r["Symbol"] || ""),
-    description:
-      r["AssetClass"] === "CASH" ? (r["Symbol"] ?? "") : (r["Description"] ?? ""),
-    assetClass: r["AssetClass"] ?? "",
-    buySell: r["Buy/Sell"] ?? "",
-    qty: Math.abs(f(r["Quantity"])),
-    tradeMoney: Math.abs(f(r["TradeMoney"])),
-    netCash: Math.abs(f(r["NetCash"])),
-    costBasis: Math.abs(f(r["CostBasis"])),
-    fx: f(r["FXRateToBase"]),
-  }));
+  return aggregated
+    .filter((r) => r["AssetClass"] !== "CASH")
+    .map((r) => ({
+      date: r["TradeDate"] ?? "",
+      isin: r["ISIN"] || r["Symbol"] || "",
+      description: r["Description"] ?? "",
+      assetClass: r["AssetClass"] ?? "",
+      buySell: r["Buy/Sell"] ?? "",
+      qty: Math.abs(f(r["Quantity"])),
+      tradeMoney: Math.abs(f(r["TradeMoney"])),
+      netCash: Math.abs(f(r["NetCash"])),
+      costBasis: Math.abs(f(r["CostBasis"])),
+      fx: f(r["FXRateToBase"]),
+    }));
 }
 
 interface PygAccEntry {
@@ -305,54 +305,6 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
 
   for (const trade of rawTrades) {
     const { isin, description, assetClass, buySell, qty, tradeMoney, netCash, costBasis, fx, date } = trade;
-
-    if (assetClass === "CASH") {
-      // CASH forex: track non-EUR currencies as FIFO positions.
-      // Symbol is "X.Y" (e.g. "EUR.USD", "GBP.USD").
-      // Quantity = units of X; TradeMoney = units of Y; FXRateToBase = EUR per unit of Y.
-      // BUY X.Y → receive X, give Y. SELL X.Y → give X, receive Y.
-      const [baseCcy = "", quoteCcy = ""] = isin.split(".");
-      const isReceiveBase = buySell === "BUY";
-      const receivedCcy = isReceiveBase ? baseCcy : quoteCcy;
-      const receivedQty = isReceiveBase ? qty : tradeMoney;
-      const givenCcy    = isReceiveBase ? quoteCcy : baseCcy;
-      const givenQty    = isReceiveBase ? tradeMoney : qty;
-      const tradeEur    = tradeMoney * fx; // EUR value of the whole trade
-
-      // Open lot for received non-EUR currency (cost basis in EUR)
-      if (receivedCcy !== "EUR" && receivedQty > 1e-10) {
-        const lotList = lots.get(receivedCcy) ?? [];
-        lotList.push({ qty: receivedQty, costPerUnit: tradeEur / receivedQty, fxAtBuy: 1, buyDate: date });
-        lots.set(receivedCcy, lotList);
-      }
-
-      // Close FIFO lots for given non-EUR currency → realize P&L
-      if (givenCcy !== "EUR" && givenQty > 1e-10) {
-        const lotList = lots.get(givenCcy) ?? [];
-        let remainingQty = givenQty;
-        let costBasisEur = 0;
-        for (let i = 0; i < lotList.length && remainingQty > 0; i++) {
-          const lot = lotList[i];
-          const matched = Math.min(remainingQty, lot.qty);
-          costBasisEur += matched * lot.costPerUnit; // costPerUnit already in EUR
-          lot.qty -= matched;
-          remainingQty -= matched;
-        }
-        lots.set(givenCcy, lotList.filter((l) => l.qty > 1e-10));
-        const matchedQty = givenQty - remainingQty;
-        if (matchedQty > 1e-10) {
-          const proceedsEur = tradeEur * (matchedQty / givenQty);
-          const pnl = proceedsEur - costBasisEur;
-          const year = parseInt(date.slice(0, 4), 10);
-          const key = `${year}|${isin}|CASH`;
-          if (!acc.has(key)) acc.set(key, { año: year, tipo: "CASH", isin, producto: isin, ganancia: 0, perdida: 0 });
-          const entry = acc.get(key)!;
-          if (pnl >= 0) entry.ganancia = r2(entry.ganancia + pnl);
-          else entry.perdida = r2(entry.perdida + pnl);
-        }
-      }
-      continue;
-    }
 
     if (buySell === "BUY") {
       const lotList = lots.get(isin) ?? [];
