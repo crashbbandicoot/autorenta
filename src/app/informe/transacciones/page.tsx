@@ -5,7 +5,7 @@ import { ReportTable } from "@/components/informe/ReportTable";
 import { useExtractos } from "@/context/ExtractosContext";
 import { parseOperaciones } from "@/lib/csv-parser";
 
-const COLUMNS = ["Fecha", "Ticker", "Acción", "Cantidad", "Precio", "Importe", "Comisión", "Moneda"];
+const COLUMNS = ["Fecha", "ISIN", "Descripcion", "Compra/Venta (C-V)", "Numero", "Precio accion", "Moneda", "Comision(€)-Incluye AutoFX (DeGiro)", "Valor Total Transaccion en (€)"];
 
 export default function TransaccionesPage() {
   const { csvFiles, validation } = useExtractos();

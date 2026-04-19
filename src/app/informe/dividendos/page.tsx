@@ -5,7 +5,7 @@ import { ReportTable } from "@/components/informe/ReportTable";
 import { useExtractos } from "@/context/ExtractosContext";
 import { parseDividendos } from "@/lib/csv-parser";
 
-const COLUMNS = ["Fecha", "Ticker", "Descripción", "País", "Bruto (USD)", "Retención", "Neto (USD)"];
+const COLUMNS = ["Fecha", "ISIN", "Producto", "Pais", "Valor Bruto (€)", "Retencion origen(€)", "Valor Neto(€)"];
 
 export default function DividendosPage() {
   const { csvFiles, validation } = useExtractos();

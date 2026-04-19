@@ -43,5 +43,8 @@ next-env.d.ts
 # playwright
 .playwright-mcp/
 
+# test data (personal examples, never commit)
+test_data/
+
 # claude settings
 .claude/
