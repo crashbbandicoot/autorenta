@@ -22,13 +22,13 @@ export interface TransaccionRow {
 
 export interface PygRow {
   Año: number;
-  Ticker: string;
   Tipo: string;
-  "F. Compra": string;
-  "F. Venta": string;
-  "Precio Compra": number;
-  "Precio Venta": number;
-  "Resultado (EUR)": number;
+  ISIN: string;
+  Producto: string;
+  "Ganancia (€)": number;
+  "Pérdida si puede imputarse (€)": number;
+  "Pérdida desbloqueada de otros años (ya incluida en la perdida que puede imputarse) (€)": number;
+  "Pérdida que no puede imputarse (regla 2 meses) (€)": number;
 }
 
 export interface ExtractosState {

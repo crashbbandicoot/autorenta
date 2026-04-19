@@ -5,7 +5,13 @@ import { ReportTable } from "@/components/informe/ReportTable";
 import { useExtractos } from "@/context/ExtractosContext";
 import { calcularPyG } from "@/lib/csv-parser";
 
-const COLUMNS = ["Año", "Ticker", "Tipo", "F. Compra", "F. Venta", "Precio Compra", "Precio Venta", "Resultado (EUR)"];
+const COLUMNS = [
+  "Año", "Tipo", "ISIN", "Producto",
+  "Ganancia (€)",
+  "Pérdida si puede imputarse (€)",
+  "Pérdida desbloqueada de otros años (ya incluida en la perdida que puede imputarse) (€)",
+  "Pérdida que no puede imputarse (regla 2 meses) (€)",
+];
 
 export default function PygPage() {
   const { csvFiles, validation } = useExtractos();

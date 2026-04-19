@@ -222,6 +222,7 @@ interface Lot {
 interface RawTrade {
   date: string;
   isin: string; // ISIN for STK/OPT, Symbol for CASH
+  description: string;
   assetClass: string;
   buySell: string;
   qty: number;
@@ -239,6 +240,8 @@ function parseRawTrades(files: CsvFile[]): RawTrade[] {
     date: r["TradeDate"] ?? "",
     isin:
       r["AssetClass"] === "CASH" ? (r["Symbol"] ?? "") : (r["ISIN"] || r["Symbol"] || ""),
+    description:
+      r["AssetClass"] === "CASH" ? (r["Symbol"] ?? "") : (r["Description"] ?? ""),
     assetClass: r["AssetClass"] ?? "",
     buySell: r["Buy/Sell"] ?? "",
     qty: Math.abs(f(r["Quantity"])),
@@ -249,22 +252,31 @@ function parseRawTrades(files: CsvFile[]): RawTrade[] {
   }));
 }
 
+interface PygAccEntry {
+  año: number;
+  tipo: string;
+  isin: string;
+  producto: string;
+  ganancia: number;
+  perdida: number;
+}
+
 export function calcularPyG(files: CsvFile[]): PygRow[] {
   const rawTrades = parseRawTrades(files);
   const lots = new Map<string, Lot[]>();
-  const result: PygRow[] = [];
+
+  // Accumulator keyed by "year|isin|assetClass" preserving insertion order
+  const acc = new Map<string, PygAccEntry>();
 
   for (const trade of rawTrades) {
-    const { isin, assetClass, buySell, qty, tradeMoney, netCash, costBasis, fx, date } = trade;
+    const { isin, description, assetClass, buySell, qty, tradeMoney, netCash, costBasis, fx, date } = trade;
     const isCash = assetClass === "CASH";
 
     if (buySell === "BUY") {
       const lotList = lots.get(isin) ?? [];
-      // costPerUnit in native currency
       const costPerUnit = isCash
         ? (qty > 0 ? tradeMoney / qty : 0)
         : (qty > 0 ? costBasis / qty : 0);
-
       lotList.push({ qty, costPerUnit, fxAtBuy: fx, buyDate: date });
       lots.set(isin, lotList);
     } else {
@@ -272,25 +284,18 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
       const lotList = lots.get(isin) ?? [];
       let remainingQty = qty;
       let costBasisEur = 0;
-      let oldestBuyDate = date;
 
       for (let i = 0; i < lotList.length && remainingQty > 0; i++) {
         const lot = lotList[i];
         const matched = Math.min(remainingQty, lot.qty);
         costBasisEur += matched * lot.costPerUnit * lot.fxAtBuy;
-        if (i === 0) oldestBuyDate = lot.buyDate;
         lot.qty -= matched;
         remainingQty -= matched;
       }
 
-      // Remove exhausted lots
-      lots.set(
-        isin,
-        lotList.filter((l) => l.qty > 1e-10)
-      );
+      lots.set(isin, lotList.filter((l) => l.qty > 1e-10));
 
-      // For CASH forex: unmatched qty means EUR sold from base-currency balance
-      // (no explicit BUY lot). Cost = face value (1 EUR = 1 EUR) → real FX P&L.
+      // For CASH forex: unmatched qty = EUR sold from base balance (cost = face value)
       if (isCash && remainingQty > 1e-10) {
         costBasisEur += remainingQty;
       }
@@ -298,19 +303,28 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
       const proceedsEur = isCash ? tradeMoney * fx : netCash * fx;
       const pnl = proceedsEur - costBasisEur;
       const year = parseInt(date.slice(0, 4), 10);
+      const key = `${year}|${isin}|${assetClass}`;
 
-      result.push({
-        Año: year,
-        Ticker: isin,
-        Tipo: assetClass,
-        "F. Compra": fmtDate(oldestBuyDate),
-        "F. Venta": fmtDate(date),
-        "Precio Compra": r2(costBasisEur),
-        "Precio Venta": r2(proceedsEur),
-        "Resultado (EUR)": r2(pnl),
-      });
+      if (!acc.has(key)) {
+        acc.set(key, { año: year, tipo: assetClass, isin, producto: description, ganancia: 0, perdida: 0 });
+      }
+      const entry = acc.get(key)!;
+      if (pnl >= 0) {
+        entry.ganancia = r2(entry.ganancia + pnl);
+      } else {
+        entry.perdida = r2(entry.perdida + pnl);
+      }
     }
   }
 
-  return result;
+  return [...acc.values()].map((e) => ({
+    Año: e.año,
+    Tipo: e.tipo,
+    ISIN: e.isin,
+    Producto: e.producto,
+    "Ganancia (€)": e.ganancia,
+    "Pérdida si puede imputarse (€)": e.perdida,
+    "Pérdida desbloqueada de otros años (ya incluida en la perdida que puede imputarse) (€)": 0,
+    "Pérdida que no puede imputarse (regla 2 meses) (€)": 0,
+  }));
 }
