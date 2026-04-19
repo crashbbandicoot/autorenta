@@ -35,10 +35,14 @@ export default function InformeDividendosPage() {
         />
       </div>
       <ReportTable columns={COLUMNS} rows={rows} />
-      {validation?.valid && (
+      {rows.length === 0 && validation?.valid && csvFiles.some((f) => f.type === "dividendos") && (
         <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-xs text-amber-800 space-y-1">
-          <p className="font-medium">El cálculo del Informe de Dividendos está pendiente de implementación.</p>
-          <p>Las columnas ya reflejan el formato final del informe (casillas 0029 y 0588). Los datos se mostrarán aquí en cuanto se complete el backend.</p>
+          <p className="font-medium">No se generaron filas a partir de los archivos de dividendos.</p>
+          <p>Causas posibles:</p>
+          <ul className="list-disc list-inside space-y-0.5 text-amber-700">
+            <li>La sesión expiró — vuelve a <a href="/subir-extractos" className="underline">Subir extractos</a> para recargar el ZIP.</li>
+            <li>El formato del CSV ha cambiado (posible actualización de IBKR).</li>
+          </ul>
         </div>
       )}
     </div>
