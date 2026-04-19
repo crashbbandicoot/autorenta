@@ -31,6 +31,20 @@ export interface PygRow {
   "Pérdida que no puede imputarse (regla 2 meses) (€)": number;
 }
 
+export interface InformeDividendosRow {
+  Año: number;
+  País: string;
+  "Importe Bruto (€)": number;
+  "Reten. Ori.(€)": number;
+  "Reten. Des.(€)": number;
+  "% Retenciones": number;
+  "Casilla 0029 — Importe Bruto (€)": number;
+  "Reten. dest. -España- (€)": number;
+  "Casilla 0588 — Bruto Doble Impo. (€)": number;
+  "Reten. ori. Doble Impo. (€)": number;
+  "% según lím. convenio": number;
+}
+
 export interface ExtractosState {
   zipFile: File | null;
   validation: ValidationResult | null;

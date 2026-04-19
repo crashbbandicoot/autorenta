@@ -8,6 +8,7 @@ const tabs = [
   { label: "Histórico de Dividendos", href: "/informe/dividendos" },
   { label: "Histórico de Transacciones", href: "/informe/transacciones" },
   { label: "Informe de PyG", href: "/informe/pyg" },
+  { label: "Informe de Dividendos", href: "/informe/informe-dividendos" },
 ];
 
 export function InformeSubNav() {

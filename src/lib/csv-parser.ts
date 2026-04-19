@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import type { CsvFile, DividendRow, TransaccionRow, PygRow } from "@/types";
+import type { CsvFile, DividendRow, TransaccionRow, PygRow, InformeDividendosRow } from "@/types";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -354,4 +354,9 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
     "Pérdida desbloqueada de otros años (ya incluida en la perdida que puede imputarse) (€)": 0,
     "Pérdida que no puede imputarse (regla 2 meses) (€)": 0,
   }));
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function calcularInformeDividendos(_files: CsvFile[]): InformeDividendosRow[] {
+  return []; // TODO: implementar cálculo
 }
