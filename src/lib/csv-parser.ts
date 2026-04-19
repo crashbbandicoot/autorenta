@@ -261,8 +261,43 @@ interface PygAccEntry {
   perdida: number;
 }
 
+// Detect ISIN renames from corporate action rows (TradeMoney="IC").
+// Returns map: oldIsin → newIsin.
+function parseCorporateActions(files: CsvFile[]): Map<string, string> {
+  const oldToNew = new Map<string, string>();
+  for (const file of files.filter((f) => f.type === "operaciones")) {
+    const parsed = Papa.parse<Record<string, string>>(file.rawContent, {
+      header: true,
+      skipEmptyLines: true,
+    });
+    const caRows = parsed.data.filter(
+      (r) => r["Model"] !== "Model" && r["TradeMoney"] === "IC"
+    );
+    if (caRows.length === 0) continue;
+    const losers = caRows.filter((r) => (r["TransactionType"] ?? "").startsWith("-"));
+    const gainers = caRows.filter(
+      (r) => !(r["TransactionType"] ?? "").startsWith("-") && r["TransactionType"] !== ""
+    );
+    for (const loser of losers) {
+      const fx = loser["FXRateToBase"] ?? "";
+      const gainer = gainers.find((r) => r["FXRateToBase"] === fx);
+      if (!gainer) continue;
+      const oldIsin = loser["ISIN"] || loser["Symbol"] || "";
+      const newIsin = gainer["ISIN"] || gainer["Symbol"] || "";
+      if (oldIsin && newIsin && oldIsin !== newIsin) {
+        oldToNew.set(oldIsin, newIsin);
+      }
+    }
+  }
+  return oldToNew;
+}
+
 export function calcularPyG(files: CsvFile[]): PygRow[] {
-  const rawTrades = parseRawTrades(files);
+  const isinRemap = parseCorporateActions(files);
+  const rawTrades = parseRawTrades(files).map((t) => ({
+    ...t,
+    isin: isinRemap.get(t.isin) ?? t.isin,
+  }));
   const lots = new Map<string, Lot[]>();
 
   // Accumulator keyed by "year|isin|assetClass" preserving insertion order
