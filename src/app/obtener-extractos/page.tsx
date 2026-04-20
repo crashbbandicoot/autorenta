@@ -65,11 +65,30 @@ export default function ObtenerExtractosPage() {
         </TutorialStep>
       </TutorialSection>
 
-      <TutorialSection title="3. Preparar el ZIP">
+      <TutorialSection title="3. Informe de Actividad (Activity Statement)">
+        <InfoCallout variant="info" className="mb-4">
+          Este informe es necesario para calcular las <strong>ganancias y pérdidas por tipo de cambio</strong> (divisas).
+          IBKR realiza internamente el cálculo FIFO y lo incluye en este documento.
+        </InfoCallout>
+        <TutorialStep number={1} title='Accede a "Performance &amp; Statements" → "Statements"' />
+        <TutorialStep number={2} title='En "Default Statements", selecciona "Activity" y elige el período anual' />
+        <TutorialStep number={3} title='Descarga el informe en formato CSV (no PDF)' />
+        <TutorialStep
+          number={4}
+          title="Renombra el archivo descargado siguiendo el formato actividad_AÑO.csv"
+        >
+          <InfoCallout variant="code">
+            Ejemplo: U1234567_20240101_20241231.csv → <strong>actividad_2024.csv</strong>
+          </InfoCallout>
+          <p>Repite para cada año que necesites declarar.</p>
+        </TutorialStep>
+      </TutorialSection>
+
+      <TutorialSection title="4. Preparar el ZIP">
         <TutorialStep number={1} title="Reúne todos los CSVs descargados en una misma carpeta" />
         <TutorialStep number={2} title="Comprueba que los nombres siguen el formato correcto">
           <InfoCallout variant="code">
-            dividendos_2023.csv · dividendos_2024.csv · operaciones_2023.csv · operaciones_2024.csv ...
+            actividad_2023.csv · actividad_2024.csv · dividendos_2023.csv · dividendos_2024.csv · operaciones_2023.csv · operaciones_2024.csv ...
           </InfoCallout>
         </TutorialStep>
         <TutorialStep number={3} title="Selecciona todos los archivos CSV y comprímellos en un único archivo .zip" />
