@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import Papa from "papaparse";
 import type { ValidationResult, CsvFile } from "@/types";
 
-const VALID_FILE_REGEX = /^(dividendos|operaciones)_(\d{4})\.csv$/i;
+const VALID_FILE_REGEX = /^(dividendos|operaciones|actividad)_(\d{4})\.csv$/i;
 
 // Asset classes the parser knows how to handle. Anything outside this set
 // gets treated as STK (non-cash), which may produce wrong P&L figures.
@@ -79,6 +79,17 @@ function validateCsvContent(csvFile: CsvFile): { errors: string[]; warnings: str
             `Reporta este aviso indicando el nombre del archivo y el tipo de activo.`
         );
       }
+    }
+  } else if (csvFile.type === "actividad") {
+    const hasSection = csvFile.rawContent.includes(
+      "Realized & Unrealized Performance Summary"
+    );
+    if (!hasSection) {
+      errors.push(
+        `${csvFile.name}: no se encontró la sección "Realized & Unrealized Performance Summary". ` +
+          `Este archivo no parece ser un Activity Statement de IBKR. ` +
+          `Descarga el informe en formato CSV desde IBKR y renómbralo a actividad_AÑO.csv.`
+      );
     }
   } else if (csvFile.type === "dividendos") {
     const parsed = Papa.parse<string[]>(csvFile.rawContent, {
@@ -174,7 +185,7 @@ export async function validateZip(file: File): Promise<ValidationResult> {
       const csvFile: CsvFile = {
         name: basename,
         year: parseInt(match[2], 10),
-        type: match[1].toLowerCase() as "dividendos" | "operaciones",
+        type: match[1].toLowerCase() as "dividendos" | "operaciones" | "actividad",
         rawContent: content,
       };
 

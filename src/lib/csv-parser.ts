@@ -369,7 +369,7 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
     }
   }
 
-  return [...acc.values()].map((e) => ({
+  const stkRows = [...acc.values()].map((e) => ({
     Año: e.año,
     Tipo: e.tipo,
     ISIN: e.isin,
@@ -379,6 +379,49 @@ export function calcularPyG(files: CsvFile[]): PygRow[] {
     "Pérdida desbloqueada de otros años (ya incluida en la perdida que puede imputarse) (€)": 0,
     "Pérdida que no puede imputarse (regla 2 meses) (€)": 0,
   }));
+  const cashRows = calcularCashPyG(files);
+  return [...stkRows, ...cashRows].sort((a, b) =>
+    a.Año - b.Año || a.Tipo.localeCompare(b.Tipo)
+  );
+}
+
+function calcularCashPyG(files: CsvFile[]): PygRow[] {
+  const result: PygRow[] = [];
+
+  for (const file of files.filter((f) => f.type === "actividad")) {
+    const parsed = Papa.parse<string[]>(file.rawContent, {
+      header: false,
+      skipEmptyLines: true,
+    });
+
+    for (const row of parsed.data) {
+      if (
+        row[0] !== "Realized & Unrealized Performance Summary" ||
+        row[1] !== "Data" ||
+        row[2] !== "Forex" ||
+        !row[3] ||
+        row[3] === "Total"
+      ) continue;
+
+      const ganancia = r2(f(row[5]) + f(row[7]));
+      const perdida  = r2(f(row[6]) + f(row[8]));
+
+      if (ganancia === 0 && perdida === 0) continue;
+
+      result.push({
+        Año: file.year,
+        Tipo: "FOREX",
+        ISIN: "",
+        Producto: row[3],
+        "Ganancia (€)": ganancia,
+        "Pérdida si puede imputarse (€)": perdida,
+        "Pérdida desbloqueada de otros años (ya incluida en la perdida que puede imputarse) (€)": 0,
+        "Pérdida que no puede imputarse (regla 2 meses) (€)": 0,
+      });
+    }
+  }
+
+  return result;
 }
 
 export function calcularInformeDividendos(files: CsvFile[]): InformeDividendosRow[] {

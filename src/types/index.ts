@@ -1,7 +1,7 @@
 export interface CsvFile {
   name: string;
   year: number;
-  type: "dividendos" | "operaciones";
+  type: "dividendos" | "operaciones" | "actividad";
   rawContent: string;
 }
 
