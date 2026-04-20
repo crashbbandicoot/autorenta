@@ -160,7 +160,7 @@ function compareRow(exp, got) {
 
 // ── main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  const zipData  = fs.readFileSync('./test_data/inputs/renta_2026.zip');
+  const zipData  = fs.readFileSync('./test_data/inputs/renta_2025.zip');
   const zip      = await JSZip.loadAsync(zipData);
   const csvFiles = [];
   for (const [name, entry] of Object.entries(zip.files)) {
