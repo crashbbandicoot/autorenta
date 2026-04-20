@@ -82,14 +82,20 @@ El validador (`src/lib/zip-validator.ts`) exige un `actividad_YYYY.csv` por cada
 - `treaty-rates.ts`: tabla estática de límites por convenio según AEAT, con overrides por año (ej. Brasil 2024+ = 0% — tratado terminado). Fuente: https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-tributacion-no-residentes/anexos/limites-imposicion-convenios.html
 - Validado contra `test_data/outputs/InformePyG.pdf` páginas 7-9: 137/140 campos exactos. Las 3 diferencias son informativas y no afectan a las casillas de la declaración (ver `validate_dividendos.cjs`).
 
+## Datos de test
+
+- ZIP de referencia: `test_data/inputs/renta_2025.zip` (años 2022, 2023, 2024 — 2025 excluido por datos incompletos)
+- CSVs descomprimidos en: `test_data/inputs_descomprimidos/` (mismos años)
+- PDF de referencia: `test_data/outputs/InformePyG.pdf`
+
 ## Scripts de diagnóstico / validación
 
-Los archivos `.cjs` en la raíz son scripts de Node para diagnóstico y validación, no son parte del build:
+Los archivos `.cjs` en la raíz son scripts de Node para diagnóstico y validación, no son parte del build. Todos leen `test_data/inputs/renta_2025.zip`.
 
-| Archivo | Propósito |
-|---|---|
-| `validate_pyg_stk.cjs` | Compara resultados STK de `calcularPyG` con el PDF de referencia |
-| `validate_dividendos.cjs` | Compara resultados de `calcularInformeDividendos` con el PDF (págs. 7-9) |
-| `diag_pyg.cjs` | Diagnóstico de trades individuales (CASH, parciales, DR. MARTENS…) |
-| `validate_all.cjs` | Validación general |
-| `test_ops.cjs/mjs` | Pruebas de operaciones |
+| Archivo | Propósito | Estado actual |
+|---|---|---|
+| `validate_pyg_stk.cjs` | Compara resultados STK de `calcularPyG` con el PDF de referencia | 45/48 ✓ — 3 difs. GB (FX GBP/EUR) aceptadas |
+| `validate_dividendos.cjs` | Compara resultados de `calcularInformeDividendos` con el PDF (págs. 7-9) | 2023–2024 ✓; dif. 2022 US pre-existente |
+| `validate_all.cjs` | Validación general (dividendos + operaciones + PyG) | 312/312 ops ✅, 134/134 divs ✅ |
+| `diag_pyg.cjs` | Diagnóstico de trades individuales (CASH, parciales, DR. MARTENS…) | — |
+| `test_ops.cjs/mjs` | Pruebas de operaciones | — |
