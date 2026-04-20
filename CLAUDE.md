@@ -45,11 +45,32 @@ src/
 └── types/                  # Interfaces TypeScript compartidas
 ```
 
+## Tipos de fichero aceptados en el ZIP
+
+| Nombre | Fuente IBKR | Obligatorio |
+|---|---|---|
+| `operaciones_YYYY.csv` | Trades (Activity Statement, sección Trades, formato CSV) | Sí |
+| `dividendos_YYYY.csv` | Dividends (Activity Statement, sección Dividends, formato CSV) | Sí |
+| `actividad_YYYY.csv` | Activity Statement completo (formato CSV, renombrado por el usuario) | Sí (por cada año con operaciones) |
+
+El validador (`src/lib/zip-validator.ts`) exige un `actividad_YYYY.csv` por cada año con `operaciones_YYYY.csv`. Sin él el ZIP se rechaza con mensaje descriptivo.
+
 ## Lógica de cálculo PyG (`src/lib/csv-parser.ts`)
 
-- `calcularPyG` calcula solo asset classes **STK** (y OPT/FUT si aparecen). Las filas `AssetClass === "CASH"` se filtran en `parseRawTrades` y no se procesan.
+`calcularPyG` devuelve filas STK + FOREX combinadas, ordenadas por año:
+
+### STK / OPT / FUT
+- Las filas `AssetClass === "CASH"` se filtran en `parseRawTrades` y no entran en el cálculo STK.
 - Algoritmo FIFO por ISIN; soporta partial fills (agrupados por `IBOrderID`) y corporate actions (renombrado de ISIN).
 - Validado contra `test_data/outputs/InformePyG.pdf`: 50/53 filas STK exactas. Las 3 diferencias restantes son acciones GB cotizadas en GBP — pequeñas discrepancias de FX GBP/EUR, aceptadas de momento.
+
+### FOREX (`calcularCashPyG`)
+- Lee `actividad_YYYY.csv` (Activity Statement completo de IBKR).
+- Extrae filas de la sección `Realized & Unrealized Performance Summary` con categoría `Forex` (excluye la fila `Total`).
+- IBKR ya aplica FIFO internamente; los importes están en EUR (divisa base de la cuenta).
+- Agrupa por año + divisa (CAD, GBP, PLN, SEK, USD…).
+- `Ganancia (€)` = S/T Profit + L/T Profit (cols 5 + 7); `Pérdida (€)` = S/T Loss + L/T Loss (cols 6 + 8).
+- `Tipo = "FOREX"`, `ISIN = ""`, `Producto = código de divisa`.
 
 ## Lógica de cálculo Informe de Dividendos (`src/lib/csv-parser.ts` + `src/lib/treaty-rates.ts`)
 
