@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const tabs = [
+  { label: "Valores para declaración", href: "/informe/valores-declaracion" },
   { label: "Histórico de Dividendos", href: "/informe/dividendos" },
   { label: "Histórico de Transacciones", href: "/informe/transacciones" },
   { label: "Informe de PyG", href: "/informe/pyg" },

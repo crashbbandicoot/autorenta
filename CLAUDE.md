@@ -33,7 +33,8 @@ src/
 ├── app/                    # Rutas Next.js (App Router)
 │   ├── obtener-extractos/  # Tutorial descarga IBKR
 │   ├── subir-extractos/    # Upload + validación ZIP
-│   ├── informe/            # 4 sub-informes + Excel export
+│   ├── informe/            # 5 sub-informes + Excel export
+│   │   └── valores-declaracion/ # KPIs del año más reciente para rellenar la declaración
 │   └── instrucciones-renta/# Tutorial AEAT
 ├── components/
 │   ├── layout/             # AppShell, TopNav, NavLink
@@ -84,7 +85,7 @@ El validador (`src/lib/zip-validator.ts`) exige un `actividad_YYYY.csv` por cada
 
 ## Datos de test
 
-- ZIP de referencia: `test_data/inputs/renta_2025.zip` (años 2022, 2023, 2024 — 2025 excluido por datos incompletos)
+- ZIP de referencia: `test_data/inputs/renta_2025.zip` (años 2022, 2023, 2024)
 - CSVs descomprimidos en: `test_data/inputs_descomprimidos/` (mismos años)
 - PDF de referencia: `test_data/outputs/InformePyG.pdf`
 
