@@ -178,7 +178,7 @@ export async function validateZip(file: File): Promise<ValidationResult> {
     const match = VALID_FILE_REGEX.exec(basename);
     if (!match) {
       errors.push(
-        `Archivo no permitido: "${basename}". Solo se aceptan archivos con formato dividendos_AÑO.csv u operaciones_AÑO.csv`
+        `Archivo no permitido: "${basename}". Solo se aceptan archivos con formato dividendos_AÑO.csv, operaciones_AÑO.csv o actividad_AÑO.csv`
       );
     } else {
       const content = await zipEntry.async("string");
@@ -201,6 +201,17 @@ export async function validateZip(file: File): Promise<ValidationResult> {
   const duplicates = names.filter((n, i) => names.indexOf(n) !== i);
   if (duplicates.length > 0) {
     errors.push(`Archivos duplicados: ${duplicates.join(", ")}`);
+  }
+
+  // actividad_YYYY.csv is required for every year that has operaciones_YYYY.csv
+  const opYears = csvFiles.filter((f) => f.type === "operaciones").map((f) => f.year);
+  const actYears = new Set(csvFiles.filter((f) => f.type === "actividad").map((f) => f.year));
+  const missingAct = opYears.filter((y) => !actYears.has(y));
+  if (missingAct.length > 0) {
+    errors.push(
+      `Falta el informe de actividad para: ${missingAct.map((y) => `actividad_${y}.csv`).join(", ")}. ` +
+        `Descárgalo desde IBKR (Informes → Extractos → Activity Statement, formato CSV) y renómbralo a actividad_AÑO.csv.`
+    );
   }
 
   return { valid: errors.length === 0, errors, warnings, files: csvFiles };
