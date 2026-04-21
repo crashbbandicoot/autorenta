@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useExtractos } from "@/context/ExtractosContext";
-import { calcularPyG } from "@/lib/csv-parser";
+import { calcularPyG, calcularInformeDividendos } from "@/lib/csv-parser";
 
 function KpiCard({ label, value }: { label: string; value?: string }) {
   return (
@@ -75,6 +75,14 @@ export default function ValoresDeclaracionPage() {
   const otrosTransmision = otrosPygRows.reduce((s, r) => s + r["Ganancia (€)"], 0);
   const otrosAdquisicion = otrosPygRows.reduce((s, r) => s + r["Pérdida si puede imputarse (€)"], 0);
 
+  const divRows = calcularInformeDividendos(csvFiles)
+    .filter((r) => r.Año === maxYear && r.País !== "Return of Capital");
+
+  const divBruto = divRows.reduce((s, r) => s + r["Importe Bruto (€)"], 0);
+  const divRetenciones = divRows.reduce((s, r) => s + r["Reten. dest. -España- (€)"], 0);
+  const divBrutoDobleImpo = divRows.reduce((s, r) => s + r["Casilla 0588 — Bruto Doble Impo. (€)"], 0);
+  const divRetenDobleImpo = divRows.reduce((s, r) => s + r["Reten. ori. Doble Impo. (€)"], 0);
+
   const fmt = (n: number) =>
     n.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
 
@@ -97,10 +105,10 @@ export default function ValoresDeclaracionPage() {
       </Section>
 
       <Section title="Dividendos">
-        <KpiCard label="Importe bruto total (€)" />
-        <KpiCard label="Retención en origen total (€)" />
-        <KpiCard label="Casilla 0029 — Importe bruto (€)" />
-        <KpiCard label="Casilla 0588 — Doble imposición (€)" />
+        <KpiCard label="Ingresos íntegros" value={fmt(divBruto)} />
+        <KpiCard label="Retenciones" value={fmt(divRetenciones)} />
+        <KpiCard label="Rendimientos netos reducidos (Doble imposición)" value={fmt(divBrutoDobleImpo)} />
+        <KpiCard label="Impuesto satisfecho en el extranjero" value={fmt(divRetenDobleImpo)} />
       </Section>
     </div>
   );
