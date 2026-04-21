@@ -464,7 +464,7 @@ export function calcularInformeDividendos(files: CsvFile[]): InformeDividendosRo
         "Casilla 0588 — Bruto Doble Impo. (€)": brutoDI,
         "Reten. ori. Doble Impo. (€)": retenDI,
         // Mostrar el límite del convenio solo cuando es aplicable (hasTreaty); 0 si no aplica
-        "% según lím. convenio": hasTreaty ? treatyRate : 0,
+        "% según lím. convenio": treatyRate,
       };
     });
 }
