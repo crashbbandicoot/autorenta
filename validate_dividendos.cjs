@@ -86,7 +86,7 @@ function calcularInformeDividendos(csvFiles) {
         'Reten. Ori.(€)':                   retenOri,
         'Reten. Des.(€)':                   0,
         '% Retenciones':                    pctRet,
-        'Casilla 0029 — Importe Bruto (€)': bruto,
+        'Casilla 0029 — Importe Bruto (€)': pais === 'Return of Capital' ? 0 : bruto,
         'Reten. dest. -España- (€)':        0,
         'Casilla 0588 — Bruto Doble Impo. (€)': brutoDI,
         'Reten. ori. Doble Impo. (€)':      retenDI,
@@ -107,7 +107,7 @@ const EXPECTED = [
   { año:2023, pais:'GB',               bruto: 15.98, retenOri: 0.00, pctRet: 0.00, c0029: 15.98, c0588:  0.00, retenDI: 0.00, pctConv:15 }, // PDF usa tipo antiguo 15%; nosotros 10%
   { año:2023, pais:'NL',               bruto:  1.97, retenOri: 0.22, pctRet:11.17, c0029:  1.97, c0588:  1.97, retenDI: 0.22, pctConv:15 },
   { año:2023, pais:'PL',               bruto: 70.98, retenOri:13.49, pctRet:19.01, c0029: 70.98, c0588: 70.98, retenDI:10.65, pctConv:15 },
-  { año:2023, pais:'Return of Capital',bruto:  0.47, retenOri: 0.00, pctRet: 0.00, c0029:  0.47, c0588:  0.00, retenDI: 0.00, pctConv: 0 },
+  { año:2023, pais:'Return of Capital',bruto:  0.47, retenOri: 0.00, pctRet: 0.00, c0029:  0.00, c0588:  0.00, retenDI: 0.00, pctConv: 0 },
   { año:2023, pais:'TW',               bruto:  4.17, retenOri: 0.88, pctRet:21.10, c0029:  4.17, c0588:  4.17, retenDI: 0.00, pctConv:15 }, // PDF incluye TW en DI; nosotros no (TW no en tabla AEAT)
   { año:2023, pais:'US',               bruto: 94.27, retenOri:14.15, pctRet:15.00, c0029: 94.27, c0588: 94.27, retenDI:14.14, pctConv:15 },
   // 2024
@@ -118,7 +118,7 @@ const EXPECTED = [
   { año:2024, pais:'KZ',               bruto: 19.35, retenOri: 0.00, pctRet: 0.00, c0029: 19.35, c0588:  0.00, retenDI: 0.00, pctConv: 0 }, // PDF muestra 0%; AEAT dice 15% — sin retención, hasTreaty=false
   { año:2024, pais:'NL',               bruto:  8.47, retenOri: 1.02, pctRet:12.04, c0029:  8.47, c0588:  8.47, retenDI: 1.02, pctConv:15 },
   { año:2024, pais:'PL',               bruto: 41.87, retenOri: 7.96, pctRet:19.01, c0029: 41.87, c0588: 41.87, retenDI: 6.28, pctConv:15 },
-  { año:2024, pais:'Return of Capital',bruto: 18.63, retenOri: 0.00, pctRet: 0.00, c0029: 18.63, c0588:  0.00, retenDI: 0.00, pctConv: 0 },
+  { año:2024, pais:'Return of Capital',bruto: 18.63, retenOri: 0.00, pctRet: 0.00, c0029:  0.00, c0588:  0.00, retenDI: 0.00, pctConv: 0 },
   { año:2024, pais:'SE',               bruto: 53.00, retenOri:15.90, pctRet:30.00, c0029: 53.00, c0588: 53.00, retenDI: 7.95, pctConv:15 },
   { año:2024, pais:'TW',               bruto: 13.27, retenOri: 2.78, pctRet:20.95, c0029: 13.27, c0588:  0.00, retenDI: 0.00, pctConv: 0 },
   { año:2024, pais:'US',               bruto:105.54, retenOri:15.83, pctRet:15.00, c0029:105.54, c0588:105.54, retenDI:15.83, pctConv:15 },

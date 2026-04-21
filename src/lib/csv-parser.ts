@@ -459,7 +459,7 @@ export function calcularInformeDividendos(files: CsvFile[]): InformeDividendosRo
         "Reten. Ori.(€)": retenOri,
         "Reten. Des.(€)": 0,
         "% Retenciones": pctRet,
-        "Casilla 0029 — Importe Bruto (€)": bruto,
+        "Casilla 0029 — Importe Bruto (€)": pais === "Return of Capital" ? 0 : bruto,
         "Reten. dest. -España- (€)": 0,
         "Casilla 0588 — Bruto Doble Impo. (€)": brutoDI,
         "Reten. ori. Doble Impo. (€)": retenDI,
