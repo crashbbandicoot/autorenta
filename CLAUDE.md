@@ -83,6 +83,19 @@ El validador (`src/lib/zip-validator.ts`) exige un `actividad_YYYY.csv` por cada
 - `treaty-rates.ts`: tabla estática de límites por convenio según AEAT, con overrides por año (ej. Brasil 2024+ = 0% — tratado terminado). Fuente: https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-tributacion-no-residentes/anexos/limites-imposicion-convenios.html
 - Validado contra `test_data/outputs/InformePyG.pdf` páginas 7-9: 137/140 campos exactos. Las 3 diferencias son informativas y no afectan a las casillas de la declaración (ver `validate_dividendos.cjs`).
 
+## KPIs de Dividendos en `valores-declaracion`
+
+Sección Dividendos de `src/app/informe/valores-declaracion/page.tsx`. Los nombres de los KPIs no se corresponden literalmente con los campos de `InformeDividendosRow` — mapeo correcto:
+
+| KPI (label visible) | Campo de `InformeDividendosRow` |
+|---|---|
+| Ingresos íntegros | `"Casilla 0029 — Importe Bruto (€)"` |
+| Retenciones | `"Reten. Ori.(€)"` (retención en país de origen — `"Reten. dest. -España- (€)"` siempre es 0) |
+| Rendimientos netos reducidos (Doble imposición) | `"Casilla 0588 — Bruto Doble Impo. (€)"` |
+| Impuesto satisfecho en el extranjero | `"Reten. ori. Doble Impo. (€)"` |
+
+Las filas `País === "Return of Capital"` se excluyen de los cuatro KPIs (no son renta, y el importe bruto no debe aparecer en "Ingresos íntegros"). Validado: totales 2024 coinciden exactamente con el PDF de referencia (Ingresos: 405,29 €; Retenciones: 47,02 €; C0588: 208,88 €; Imp. extranjero: 31,08 €).
+
 ## Datos de test
 
 - ZIP de referencia: `test_data/inputs/renta_2025.zip` (años 2022, 2023, 2024)
