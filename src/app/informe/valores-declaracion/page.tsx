@@ -78,8 +78,8 @@ export default function ValoresDeclaracionPage() {
   const divRows = calcularInformeDividendos(csvFiles)
     .filter((r) => r.Año === maxYear && r.País !== "Return of Capital");
 
-  const divBruto = divRows.reduce((s, r) => s + r["Importe Bruto (€)"], 0);
-  const divRetenciones = divRows.reduce((s, r) => s + r["Reten. dest. -España- (€)"], 0);
+  const divBruto = divRows.reduce((s, r) => s + r["Casilla 0029 — Importe Bruto (€)"], 0);
+  const divRetenciones = divRows.reduce((s, r) => s + r["Reten. Ori.(€)"], 0);
   const divBrutoDobleImpo = divRows.reduce((s, r) => s + r["Casilla 0588 — Bruto Doble Impo. (€)"], 0);
   const divRetenDobleImpo = divRows.reduce((s, r) => s + r["Reten. ori. Doble Impo. (€)"], 0);
 
