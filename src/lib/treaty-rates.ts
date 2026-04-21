@@ -21,7 +21,7 @@ const BASE_RATES: Record<string, number> = {
   BY: 10,  // Bielorrusia
   BO: 15,  // Bolivia
   BA: 10,  // Bosnia y Herzegovina
-  BR: 15,  // Brasil (terminado para 2024 en adelante — ver overrides)
+  BR: 15,  // Brasil
   BG: 15,  // Bulgaria
   CV: 10,  // Cabo Verde
   CA: 15,  // Canadá
@@ -107,9 +107,6 @@ const BASE_RATES: Record<string, number> = {
 
 // Cambios efectivos por año (terminaciones de convenio, nuevos protocolos, etc.)
 const YEAR_OVERRIDES: Record<number, Record<string, number>> = {
-  // Brasil denunció el convenio con España; terminado con efectos desde 1-enero-2024
-  2024: { BR: 0 },
-  2025: { BR: 0 },
 };
 
 export function getTreatyRate(country: string, year: number): number {

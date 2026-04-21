@@ -80,7 +80,7 @@ El validador (`src/lib/zip-validator.ts`) exige un `actividad_YYYY.csv` por cada
 - Filas con `"Return of Capital"` se agrupan como país especial y nunca entran en el cálculo de doble imposición.
 - Doble imposición (`Casilla 0588`, `Reten. ori. Doble Impo.`): solo aplica si `treaty_rate > 0 AND retenOri > 0 AND país ≠ "Return of Capital"`.
 - Fórmula: `Reten. ori. Doble Impo. = min(retenOri, bruto × treaty_rate / 100)`.
-- `treaty-rates.ts`: tabla estática de límites por convenio según AEAT, con overrides por año (ej. Brasil 2024+ = 0% — tratado terminado). Fuente: https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-tributacion-no-residentes/anexos/limites-imposicion-convenios.html
+- `treaty-rates.ts`: tabla estática de límites por convenio según AEAT, con overrides por año para terminaciones de convenio o nuevos protocolos. Fuente: https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/manual-tributacion-no-residentes/anexos/limites-imposicion-convenios.html
 - Validado contra `test_data/outputs/InformePyG.pdf` páginas 7-9: 137/140 campos exactos. Las 3 diferencias son informativas y no afectan a las casillas de la declaración (ver `validate_dividendos.cjs`).
 
 ## KPIs de Dividendos en `valores-declaracion`
